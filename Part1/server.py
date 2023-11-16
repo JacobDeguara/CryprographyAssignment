@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 import os
-from MersenneTwister.RandomClass import Random
+from MT19937.RandomClass import Random
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
