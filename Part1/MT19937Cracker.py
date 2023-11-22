@@ -1,3 +1,6 @@
+# Inspired by https://gist.github.com/Rhomboid/b1a882c70b7a1901efa9#file-mersenne_predict-py
+
+
 class MT19937Cracker:
     def __init__(self) -> None:
         self.list_of_seen = list()
@@ -21,14 +24,14 @@ class MT19937Cracker:
         return predicted
 
     def _undo_xor_rshift(self, x, shift):
-        """reverses the operation x ^= (x >> shift)"""
+        """reverses the operation x ^= (x >> shift) : unBitshiftRightXor"""
         result = x
         for shift_amount in range(shift, 32, shift):
             result ^= x >> shift_amount
         return result
 
     def _undo_xor_lshiftmask(self, x, shift, mask):
-        """reverses the operation x ^= ((x << shift) & mask)"""
+        """reverses the operation x ^= ((x << shift) & mask) : unBitshiftLeftXor"""
         window = (1 << shift) - 1
         for _ in range(32 // shift):
             x ^= ((window & x) << shift) & mask
