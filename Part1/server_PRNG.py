@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
+import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel
 
@@ -10,12 +11,11 @@ from MT19937.RandomClass import Random
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
+    "user1": {
+        "username": "USER",
+        "full_name": "First_name Second_name",
+        "email": "example@example.com",
         "password": "secret",
-        "disabled": False,
     }
 }
 
@@ -40,18 +40,17 @@ class MersenneTwisterRandomiser:
         self.randomElement = Random(key)
 
     def get_next_num(self):
-        return self.randomElement.randint(0, 10000)
+        return self.randomElement.randint(0, 2**32)
 
 
 class Token(BaseModel):
-    token: str
+    Token: str
 
 
 class User(BaseModel):
     username: str
     email: str | None = None
     full_name: str | None = None
-    disabled: bool | None = None
 
 
 class UserInDB(User):
@@ -101,7 +100,7 @@ def create_access_token(expires_delta: timedelta, username: str | None = None):
     return access_key_info
 
 
-@app.post("/login", response_model=Token)
+@app.get("/login", response_model=Token)
 async def login_for_access_token(username: str, password: str):
     user = authenticate_user(fake_users_db, username, password)
     if not user:
@@ -114,29 +113,49 @@ async def login_for_access_token(username: str, password: str):
     access_token = create_access_token(
         expires_delta=access_token_expires, username=user.username
     )
-    return {"token": access_token}
+    return {"Token": access_token}
 
 
-@app.get("/drone/setup", response_model=Token)
-async def start_drones(access_token: str):
+@app.get("/drone/setup")
+async def start_drones(access_token: int):
+    if access_token not in fake_access_key_db:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You do not have access to this command",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     for x in fake_drone_db:
         fake_drone_db[x] = MersenneTwisterRandomiserClass.get_next_num()
-    return {"token": ":thumbs_up:"}
+    return {"Response": "successful"}
 
 
-@app.get("/drone/getpos", response_model=Token)
-async def get_drone_position(access_token: str, drone_number: str):
-    dronePos = get_drone_pos(fake_drone_db, drone_number)
+@app.get("/drone/getpos")
+async def get_drone_position(drone_name: str):
+    dronePos = get_drone_pos(fake_drone_db, drone_name)
     if dronePos is None:
         raise HTTPException(
             status_code=status.HTTP_204_NO_CONTENT,
             detail="Drone doesnt exist",
         )
-    return {"token": dronePos}
+    return {"Drone_position": dronePos}
+
+
+@app.get("/drone/getalldronenames")
+async def get_drones():
+    return {"Drone_names": list(fake_drone_db.keys())}
+
+
+@app.get("/drone/getalldronepositions")
+async def get_drones():
+    return {"Drone_positions": list(fake_drone_db.values())}
 
 
 @app.get("/logout")
-async def logout(access_token: str):
+async def logout(access_token: int):
     if access_token in fake_access_key_db:
         fake_access_key_db.remove(access_token)
-    return {"token": ":thumbs_up:"}
+        return {"Response": "successful"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)

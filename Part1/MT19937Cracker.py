@@ -9,10 +9,11 @@ class MT19937Cracker:
     def crack(self, random: int):
         if self.counter == 624:
             print("-- THATS ENOUGH RANDOM NUMBERS --")
-            return
+            return True
         rand_val = self._untemper(int(random))
         self.list_of_seen.append(rand_val)
         self.counter += 1
+        return False
 
     def get_next(self):
         next_rand = self.list_of_seen[-624 + 397] ^ self.timesA(
