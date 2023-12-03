@@ -1,34 +1,27 @@
-"""
-import socket
-import ssl
-
-hostname = "127.0.0.1:8443"
-# PROTOCOL_TLS_CLIENT requires valid cert chain and hostname
-context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-context.load_verify_locations(
-    "/home/jacob/coding/cryptography/Assignment/Part2/cert.pem"
-)
-
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
-    with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-        print(ssock.version())
-"""
-
-# Import socket module
 import socket
 
-# Create a socket object
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-port = 8081
-s.bind(("127.0.0.1", port))
-# Define the port on which you want to connect
-port = 8080
+SERVER_ADDR = "127.0.0.1"
+SERVER_PORT = 8080
+CLIENT_ADDR = "127.0.0.1"
+CLIENT_PORT = 8081
 
-# connect to the server on local computer
-s.connect(("127.0.0.1", port))
 
-# receive data from the server
-print(s.recv(1024))
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as client:
+    client.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-# close the connection
-s.close()
+    # Bind client
+    client.bind((CLIENT_ADDR, CLIENT_PORT))
+    print("socket binded to %s" % (CLIENT_PORT))
+
+    # connect to server
+    client.connect((SERVER_ADDR, SERVER_PORT))
+
+    # recv message
+    data = client.recv(1024)
+
+    # if message recived print message
+    if data:
+        print(f"Received: {data}")
+
+    # safe close
+    client.close()
